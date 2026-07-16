@@ -1,0 +1,14 @@
+{# templates/Default/home.html.twig #}
+{% extends 'base.html.twig' %}
+{% block title %}Erna Magnus Collection{% endblock %}
+
+{% block body %}
+    <h1>Cards A-Z</h1>
+    {% block content %}
+    <ul>
+        {% for entry in entries %}
+            <li id="{{ entry.card }}"><a href="{{ path('card-detail', {'card': entry.card}) }}">{{ entry.name }}</a></li>
+        {% endfor %}
+    </ul>
+    {% endblock %}
+{% endblock %}

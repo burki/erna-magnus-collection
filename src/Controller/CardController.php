@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Service\CardService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -11,67 +12,55 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/card')]
 class CardController extends AbstractController
 {
-    protected string $cardDir = '/a-z';
-    protected string $cardExt = '.jpg';
+    public function __construct(protected CardService $cardService) {}
 
-    public function __construct(protected string $projectDir) {}
-
-    protected function getPublicDir(): string
-    {
-        return $this->projectDir . '/public';
-    }
-
-    protected function getDataDir(): string
-    {
-        return $this->projectDir . '/data';
-    }
-
-    protected function getCardImgDir(): string
-    {
-        return $this->getPublicDir() . $this->cardDir;
-    }
-
-    protected function getCardDataDir(): string
-    {
-        return $this->getDataDir() . $this->cardDir;
-    }
-
-    protected function buildCardImages(): array
-    {
-        $fnames = [];
-        foreach (glob($this->getCardImgDir() . '/*' . $this->cardExt) as $fname) {
-            $basename = basename($fname);
-            $fnames[] = pathinfo($basename, PATHINFO_FILENAME);
-        }
-
-        return $fnames;
-    }
-
-    #[Route('/', name: 'card-list')]
+    #[Route('/', name: 'card-index')]
     public function list(): Response
     {
-        $cardData = $this->buildCardImages();
+        $cardNames = $this->cardService->buildCardNames();
 
-        return $this->redirectToRoute('card-detail', [
-            'card' => $cardData[0],
+        $entries = [];
+        foreach ($cardNames as $name) {
+            $data = $this->cardService->getData($name);
+            if (false !== $data && array_key_exists('name', $data) && is_array($data['name'])) {
+                $nameParts = [];
+                foreach (['family', 'given'] as $part) {
+                    if (array_key_exists($part, $data['name']) && !empty($data['name'][$part])) {
+                        $nameParts[] = $data['name'][$part];
+                    }
+                }
+
+                if (0 === count($nameParts)) {
+                    continue;
+                }
+
+                $entries[] = [
+                    'name' => join(', ', $nameParts),
+                    'card' => $name,
+                ];
+            }
+        }
+
+        return $this->render('Card/index.html.twig', [
+            'entries' => $entries,
         ]);
     }
 
     #[Route('/{card}', name: 'card-detail', requirements: ['card' => '[a-z0-9_-]+'])]
     public function detail(string $card): Response
     {
-        $cardImages = $this->buildCardImages();
+        $cardNames = $this->cardService->buildCardNames();
 
-        $idx = array_search($card, $cardImages);
+        $idx = array_search($card, $cardNames);
         if (false === $idx) {
-            return $this->redirectToRoute('card-list');
+            return $this->redirectToRoute('card-index');
         }
 
         // Implement the logic to display the card detail
         return $this->render('Card/detail.html.twig', [
             'cardIdx' => $idx,
-            'cardImages' => $cardImages,
-            'cardData' => json_decode(file_get_contents($this->getCardDataDir() . '/' . $cardImages[$idx] . '.json'), true),
+            'cardNames' => $cardNames,
+            'cardData' => $this->cardService->getData($cardNames[$idx]),
         ]);
     }
 }
