@@ -20,23 +20,19 @@ class CardController extends AbstractController
         $cardNames = $this->cardService->buildCardNames();
 
         $entries = [];
-        foreach ($cardNames as $name) {
-            $data = $this->cardService->getData($name);
-            if (false !== $data && array_key_exists('name', $data) && is_array($data['name'])) {
-                $nameParts = [];
-                foreach (['family', 'given'] as $part) {
-                    if (array_key_exists($part, $data['name']) && !empty($data['name'][$part])) {
-                        $nameParts[] = $data['name'][$part];
-                    }
-                }
+        foreach ($cardNames as $cardName) {
+            $data = $this->cardService->getData($cardName);
+            if (false !== $data) {
+                $card = \App\Dto\Card::createFromJson($data);
 
-                if (0 === count($nameParts)) {
+                $name = $card->getFullname();
+                if ('' === $name) {
                     continue;
                 }
 
                 $entries[] = [
-                    'name' => join(', ', $nameParts),
-                    'card' => $name,
+                    'name' => $name,
+                    'card' => $cardName,
                 ];
             }
         }
@@ -56,11 +52,45 @@ class CardController extends AbstractController
             return $this->redirectToRoute('card-index');
         }
 
+        $data = $this->cardService->getData($cardNames[$idx]);
+        if (false === $data) {
+            return $this->redirectToRoute('card-index');
+        }
+
+        $normalized = $this->cardService->getNormalizedData($cardNames[$idx]); // currently always false
+        if (false === $normalized) {
+            $normalized = $this->cardService->normalizeData($data);
+        }
+
         // Implement the logic to display the card detail
+        return $this->render('Card/detail.html.twig', [
+            'cardIdx' => $idx,
+            'cardNames' => $cardNames,
+            'card' => \App\Dto\Card::createFromJson($normalized),
+            'cardData' => [
+                'orig' => $data, // Original data from JSON
+                'normalized' => $normalized, // Placeholder for normalized data
+            ],
+        ]);
+    }
+
+    /*
+    #[Route('/{card}/edit', name: 'card-edit', requirements: ['card' => '[a-z0-9_-]+'])]
+    public function edit(string $card): Response
+    {
+        $cardNames = $this->cardService->buildCardNames();
+
+        $idx = array_search($card, $cardNames);
+        if (false === $idx) {
+            return $this->redirectToRoute('card-index');
+        }
+
+        // Implement the logic to edit the card detail
         return $this->render('Card/detail.html.twig', [
             'cardIdx' => $idx,
             'cardNames' => $cardNames,
             'cardData' => $this->cardService->getData($cardNames[$idx]),
         ]);
     }
+    */
 }

@@ -40,9 +40,78 @@
                 <img src="{{ asset('a-z/' ~ cardNames[cardIdx] ~ '.jpg') }}" class="img-fluid" alt="{{ cardNames[cardIdx] }}">
             </div>
             <div class="col col-md-6 col-lg-4">
-                <code><pre>{{ cardData|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES')) }}
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#display">Display</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#normalized">Normalized</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#original">Original</a>
+            </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+            <div class="tab-pane container active" id="display">
+                <h3>{{ card.fullname }} <small class="text-body-secondary">{{ card.title }}</small></h3>
+                {% if card.birth is not null %}
+                    <div>* {{ card.birth.place }}{% if card.birth.date is not empty and card.birth.place is not null %}, {% endif %}{{ card.birth.date }}</div>
+                {% endif %}
+                {% if card.death is not null %}
+                    <div>✡︎ {{ card.death.place }}{% if card.death.date is not empty and card.death.place is not null %}, {% endif %}{{ card.death.date }}</div>
+                {% endif %}
+                {% if card.familyRelations is not empty %}
+                    <ul class="mb-0">
+                    {% for relation in card.familyRelations %}
+                        <li>{{ relation.role }}: {{ relation.name }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if card.profession is not null %}
+                    <div><b>{{ card.profession }}</b></div>
+                {% endif %}
+                {% if card.details is not empty %}
+                    <ul class="mb-0">
+                    {% for line in card.details %}
+                        <li>{{ line }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if card.publications is not empty %}
+                <div><b>Schriften:</b></div>
+                    <ul class="mb-0">
+                    {% for line in card.publications %}
+                        <li>{{ line }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if card.literature is not empty %}
+                <div><b>Lit.:</b></div>
+                    <ul class="mb-0">
+                    {% for line in card.literature %}
+                        <li>{{ line }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {#
+                <code><pre>{{ card|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES')) }}
+                </pre></code>
+                #}
+            </div>
+            <div class="tab-pane container fade" id="normalized">
+                <code><pre>{{ cardData['normalized']|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES')) }}
                 </pre>
                 </code>
+            </div>
+            <div class="tab-pane container fade" id="original">
+                <code><pre>{{ cardData['orig']|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES')) }}
+                </pre>
+                </code>
+            </div>
+            </div><!-- .tab-content -->
             </div>
         </div><!-- .row -->
     </div><!-- .container -->
