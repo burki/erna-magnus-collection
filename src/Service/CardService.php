@@ -57,7 +57,7 @@ class CardService
         return $data;
     }
 
-    public function getNormalizedData(string $card): array|false
+    public function getNormalizedData(string $card, $resolveReferences = true): array|false
     {
         $dataFile = $this->getCardDataDir() . '/' . $card . '_normalized.json';
         if (!file_exists($dataFile)) {
@@ -69,7 +69,7 @@ class CardService
             return false;
         }
 
-        if (array_key_exists('references', $data) && 0 != ($offset = intval($data['references']))) {
+        if ($resolveReferences && array_key_exists('references', $data) && 0 != ($offset = intval($data['references']))) {
             $cardNames = $this->buildCardNames();
             $cardIdx = array_search($card, $cardNames);
             if (false !== $cardIdx && $cardIdx + $offset >= 0 && $cardIdx + $offset < count($cardNames)) {
@@ -141,19 +141,43 @@ class CardService
                     return sprintf('%s  %s der %s', $data['year'], $data['role'], $data['organization']);
                 }
                 break;
+
+            case 'literature':
+                // flatten literature into a single line
+                if (array_key_exists('pages', $data) && is_array($data['pages'])) {
+                    $data['pages'] = join(', ', $data['pages']);
+                }
+                break;
+
+            default:
+                $keys = array_keys($data);
+                if (1 === count($keys)) {
+                    $data = $data[$keys[0]];
+                    if (!is_array($data)) {
+                        $data = [$data];
+                    }
+                }
         }
 
-        // default flattening: join all values with a space
+        $value_types = array_map(fn($value) => gettype($value), $data);
+        if (in_array('array', $value_types)) {
+            dd($data); // TODO: flatten
+        }
+
         return join(' ', array_values($data));
     }
 
     public function normalizeData(array $data): array
     {
         if (array_key_exists('name', $data)) {
-            foreach (['family', 'given'] as $part) {
-                if (array_key_exists($part . '_name', $data['name'])) {
-                    $data['name'][$part] = $data['name'][$part . '_name'];
-                    unset($data['name'][$part . '_name']);
+            if (is_string($data['name'])) {
+                $data['name'] = ['family' => $data['name']];
+            } else {
+                foreach (['family', 'given'] as $part) {
+                    if (array_key_exists($part . '_name', $data['name'])) {
+                        $data['name'][$part] = $data['name'][$part . '_name'];
+                        unset($data['name'][$part . '_name']);
+                    }
                 }
             }
         } else {
@@ -308,7 +332,7 @@ class CardService
         }
 
         foreach (['publications', 'literature'] as $key) {
-            if (array_key_exists($key, $data)) {
+            if (array_key_exists($key, $data) && !is_null($data[$key])) {
                 $entries = $data[$key];
                 if (is_array($data[$key]) && !array_is_list($data[$key])) {
                     $entries = [$data[$key]];
@@ -325,7 +349,7 @@ class CardService
                         } elseif (1 === count($keys) && in_array('source', $keys)) {
                             $item = $item['source'];
                         } else {
-                            $item = join(' ', array_values($item));
+                            $item = $this->flattenStructure($item, $key);
                         }
                     }
 

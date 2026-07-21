@@ -11,6 +11,9 @@ class Card implements \JsonSerializable
     private ?string $title = null;
     private ?LifeEvent $birth = null;
     private ?LifeEvent $death = null;
+    private ?string $gender = null;
+    private ?string $religion = null;
+    private ?string $fieldOfActivity = null;
     private ?string $profession = null;
     private array $familyRelations = [];
     private array $details = [];
@@ -39,6 +42,24 @@ class Card implements \JsonSerializable
             }
         }
 
+        if (array_key_exists('gender', $value)) {
+            if (is_string($value['gender']) && '' !== trim($value['gender'])) {
+                $card->gender = trim($value['gender']);
+            }
+        }
+
+        if (array_key_exists('religion', $value)) {
+            if (is_string($value['religion']) && '' !== trim($value['religion'])) {
+                $card->religion = trim($value['religion']);
+            }
+        }
+
+        if (array_key_exists('fieldOfActivity', $value)) {
+            if (is_string($value['fieldOfActivity']) && '' !== trim($value['fieldOfActivity'])) {
+                $card->fieldOfActivity = trim($value['fieldOfActivity']);
+            }
+        }
+
         if (array_key_exists('profession', $value)) {
             if (is_string($value['profession']) && '' !== trim($value['profession'])) {
                 $card->profession = trim($value['profession']);
@@ -63,6 +84,7 @@ class Card implements \JsonSerializable
         if (array_key_exists('details', $value)) {
             foreach ($value['details'] as $line) {
                 if (!is_string($line)) {
+                    continue;
                     dd($line); // TODO: flatten
                 }
 
@@ -104,9 +126,19 @@ class Card implements \JsonSerializable
         return $this->title;
     }
 
-    public function getProfession(): ?string
+    public function getGender(): ?string
     {
-        return $this->profession;
+        return $this->gender;
+    }
+
+    public function getReligion(): ?string
+    {
+        return $this->religion;
+    }
+
+    public function getFieldOfActivity(): ?string
+    {
+        return $this->fieldOfActivity;
     }
 
     public function getBirth(): ?LifeEvent
@@ -117,6 +149,11 @@ class Card implements \JsonSerializable
     public function getDeath(): ?LifeEvent
     {
         return $this->death;
+    }
+
+    public function getProfession(): ?string
+    {
+        return $this->profession;
     }
 
     public function getFamilyRelations(): array
@@ -161,6 +198,18 @@ class Card implements \JsonSerializable
                     $ret[$event] = $serializedEvent;
                 }
             }
+        }
+
+        if (null !== $this->fieldOfActivity && '' !== trim($this->fieldOfActivity)) {
+            $ret['fieldOfActivity'] = $this->fieldOfActivity;
+        }
+
+        if (null !== $this->gender && '' !== trim($this->gender)) {
+            $ret['gender'] = $this->gender;
+        }
+
+        if (null !== $this->religion && '' !== trim($this->religion)) {
+            $ret['religion'] = $this->religion;
         }
 
         if (null !== $this->profession && '' !== trim($this->profession)) {
