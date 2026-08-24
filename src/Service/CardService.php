@@ -57,7 +57,7 @@ class CardService
         return $data;
     }
 
-    public function getNormalizedData(string $card, $resolveReferences = true): array|false
+    public function getNormalizedData(string $card, bool $resolveReferences = true): array|false
     {
         $dataFile = $this->getCardDataDir() . '/' . $card . '_normalized.json';
         if (!file_exists($dataFile)) {
@@ -85,6 +85,47 @@ class CardService
         $dataFile = $this->getCardDataDir() . '/' . $card . '_normalized.json';
 
         return file_put_contents($dataFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * Get normalized data for all cards.
+     *
+     * @param bool $resolveReferences whether to resolve references to other cards
+     *
+     * @return array an associative array of normalized data for all cards
+     */
+    public function getNormalized(bool $resolveReferences = true): array
+    {
+        $normalizedData = [];
+
+        $cardNames = $this->buildCardNames();
+        foreach ($cardNames as $cardName) {
+            $data = $this->getNormalizedData($cardName, $resolveReferences);
+            if (false === $data) {
+                $data = $this->normalizeData($this->getData($cardName));
+
+                if (false === $data) {
+                    continue; // skip cards with no data
+                }
+            }
+
+            $keys = array_keys($data);
+            if (1 === count($keys) && 'references' === $keys[0]) {
+                // skip cards that only contain references
+                continue;
+            }
+
+            if (array_key_exists('birth', $data) && is_array($data['birth']) && 0 === count($data['birth'])) {
+                unset($data['birth']);
+            }
+            if (array_key_exists('death', $data) && is_array($data['death']) && 0 === count($data['death'])) {
+                unset($data['death']);
+            }
+
+            $normalizedData[$cardName] = $data;
+        }
+
+        return $normalizedData;
     }
 
     private function removeNullOrEmptyString($haystack)

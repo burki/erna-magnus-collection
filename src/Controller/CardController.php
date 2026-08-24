@@ -18,20 +18,13 @@ class CardController extends AbstractController
     #[Route('/', name: 'card-index')]
     public function list(): Response
     {
-        $cardNames = $this->cardService->buildCardNames();
-
         $entries = [];
-        foreach ($cardNames as $cardName) {
-            $data = $this->cardService->getNormalizedData($cardName);
-            if (false === $data) {
-                $data = $this->cardService->normalizeData($this->cardService->getData($cardName));
-            }
 
-            if (false === $data) {
-                continue;
-            }
+        $normalizedCards = $this->cardService->getNormalized();
 
-            $card = \App\Dto\Card::createFromJson($data);
+        foreach ($normalizedCards as $cardName => $normalizedData) {
+
+            $card = \App\Dto\Card::createFromJson($normalizedData);
 
             $name = $card->getFullname();
             if ('' === $name) {
