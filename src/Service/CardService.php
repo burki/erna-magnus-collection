@@ -115,6 +115,7 @@ class CardService
                 continue;
             }
 
+            // don't set empty array for birth and death since they end up as list instead of object in JSON
             if (array_key_exists('birth', $data) && is_array($data['birth']) && 0 === count($data['birth'])) {
                 unset($data['birth']);
             }
