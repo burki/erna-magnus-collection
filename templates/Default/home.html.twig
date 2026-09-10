@@ -1,0 +1,28 @@
+{# templates/Default/home.html.twig #}
+{% extends 'base.html.twig' %}
+{% block title %}Erna Magnus Collection{% endblock %}
+
+{% block body %}
+    <h1>Erna Magnus Collection</h1>
+    {% block content %}
+        <p>Welcome to the Erna Magnus Collection.</p>
+        <p>
+        Browse:
+        <ul>
+            <li><a href="{{ path('card-index') }}">Cards A-Z</a></li>
+        </ul>
+        </p>
+        <p>Find out more about:
+            <ul>
+                <li>The Collection, courtesy of LBI Archives, New York:
+                <a href="https://archives.cjh.org/repositories/5/resources/14113" target="_blank">archives.cjh.org/repositories/5/resources/14113</a>
+                </li>
+                <li>Erna Magnus:<br/>
+                 Dettmer, Frauke. „Die Sozialwissenschaftlerin Dr. Erna Magnus (1896-1984)“. <i>Rendsburger Jahrbuch</i>, 2014, 105–115. <a href="https://daten2.verwaltungsportal.de/dateien/seitengenerator/d184bf3c99d16a9f2b737f33caab37b4188510/Jahrbuch_2014_digital.pdf#page=106" target="_blank">online</a> [PDF]</li>
+                <li>This project: <a href="https://burckhardt.name/presentations/erna-magnus-collection/" target="_blank">Slides</a> [in German]</li>
+                <li>The data set: <a href="./data/erna-magnus-a-z-normalized.ndjson">erna-magnus-a-z-normalized.ndjson</a> [Newline Delimited JSON]
+                <li>The code for this Web-Site: <a href="https://github.com/burki/erna-magnus-collection" target="_blank">github.com/burki/erna-magnus-collection</a></li>
+            </ul>
+        </p>
+    {% endblock %}
+{% endblock %}
